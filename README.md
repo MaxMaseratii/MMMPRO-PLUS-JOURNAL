@@ -2,6 +2,8 @@
 
 Max Maserati Model - Professional trading journal application with advanced analytics, strategy management, and performance tracking for futures traders.
 
+**Frontend-only architecture** - Deployed on GitHub Pages with Firebase backend (Auth, Firestore, Storage).
+
 ## Application Structure
 
 ### Frontend (client/)
@@ -16,21 +18,9 @@ Max Maserati Model - Professional trading journal application with advanced anal
     - sections/ - Page sections
     - ui/ - Base UI components (Radix UI)
   - pages/ - Application pages and routes
-  - lib/ - Client utilities and helpers
+  - lib/ - Client utilities and Firebase integration
   - hooks/ - React custom hooks
   - assets/ - Images and static assets
-
-### Backend (server/)
-- **server/** - Express.js server with TypeScript
-  - index.ts - Server entry point
-  - routes.ts - API route handlers
-  - db.ts - Database setup
-  - auth.ts - Authentication logic
-  - storage.ts - Data persistence
-  - vite.ts - Development server
-
-### Database Schema (shared/)
-- **shared/schema.ts** - Drizzle ORM table definitions
 
 ## Features
 
@@ -48,12 +38,12 @@ Max Maserati Model - Professional trading journal application with advanced anal
 ## Technology Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Radix UI
-- **Backend**: Express.js, TypeScript, Node.js
-- **Database**: PostgreSQL with Drizzle ORM
-- **Build Tools**: Vite, esbuild
-- **Authentication**: Passport.js
-- **Payments**: Stripe
-- **Image Optimization**: Sharp, vite-plugin-image-optimizer
+- **Backend**: Firebase (Authentication, Firestore, Cloud Storage)
+- **Deployment**: GitHub Pages (static hosting)
+- **Build Tools**: Vite
+- **Auth**: Firebase Authentication
+- **Database**: Firestore (NoSQL)
+- **File Storage**: Firebase Cloud Storage
 - **Charts**: Recharts
 - **UI Framework**: Radix UI components
 - **Tours/Guides**: React Joyride
@@ -76,39 +66,99 @@ npm run dev
 npm run build
 ```
 
-## Production
-
-```bash
-npm run start
-```
-
 ## Configuration
 
 - `tsconfig.json` - TypeScript configuration
 - `vite.config.ts` - Vite build configuration
 - `tailwind.config.ts` - Tailwind CSS customization
 - `postcss.config.js` - PostCSS plugins
-- `drizzle.config.ts` - Database migrations
+- `.env.example` - Firebase environment variables template
 
-## Database
+## Firebase Setup
 
-PostgreSQL database with Drizzle ORM for type-safe queries.
+### 1. Create a Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Click "Create a project"
+3. Name it "MMM Pro Trading Journal"
+4. Enable Google Analytics (optional)
 
-```bash
-npm run db:push
+### 2. Configure Firebase Services
+**Authentication:**
+- Go to Authentication > Sign-in method
+- Enable Email/Password
+- Enable Google OAuth
+- Add authorized redirect URIs
+
+**Firestore Database:**
+- Go to Firestore Database
+- Create database in production mode
+- Set security rules:
 ```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+    match /trades/{uid}/{document=**} {
+      allow read, write: if request.auth.uid == uid;
+    }
+    match /accounts/{uid}/{document=**} {
+      allow read, write: if request.auth.uid == uid;
+    }
+  }
+}
+```
+
+**Cloud Storage:**
+- Go to Cloud Storage
+- Create storage bucket
+- Set security rules:
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if request.auth.uid == uid;
+    }
+  }
+}
+```
+
+### 3. Get Firebase Config
+1. Go to Project Settings (gear icon)
+2. Copy your web app config
+3. Create `.env.local` in root directory
+4. Add Firebase variables (see .env.example)
 
 ## Environment Setup
 
-Create `.env` file with:
-- DATABASE_URL
-- OAuth credentials (GitHub, Google)
-- Stripe API keys
-- API endpoints and configuration
+Create `.env.local` file (based on `.env.example`):
+```
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
 
-## Notes
+## Deployment to GitHub Pages
 
-This application was extracted from Replit and prepared for GitHub hosting. See EXTRACTION_MANIFEST.md for detailed file listing.
+### Automatic Deployment
+Push to `main` branch - GitHub Actions automatically builds and deploys to GitHub Pages.
+
+### Manual Deployment
+```bash
+npm run build
+npm run preview
+```
+
+### Enable GitHub Pages
+1. Go to repo Settings > Pages
+2. Set source to "Deploy from a branch"
+3. Select `gh-pages` branch
+4. Your app will be live at: `https://maxmaseratii.github.io/MMMPRO-PLUS-JOURNAL/`
 
 ## License
 
